@@ -3,6 +3,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -38,9 +39,17 @@ func docker(t *testing.T, image, port string, environment ...string) string {
 
 	args = append(args, image)
 
-	raw, err := exec.CommandContext(t.Context(), "docker", args...).CombinedOutput()
+	// Pull progress is written to stderr on a cold Docker daemon. Only stdout
+	// contains the container ID consumed by port lookup and cleanup.
+	command := exec.CommandContext(t.Context(), "docker", args...)
+
+	var diagnostics bytes.Buffer
+
+	command.Stderr = &diagnostics
+
+	raw, err := command.Output()
 	if err != nil {
-		t.Fatalf("docker: %s: %v", raw, err)
+		t.Fatalf("docker: %s: %v", diagnostics.String(), err)
 	}
 
 	id := strings.TrimSpace(string(raw))
