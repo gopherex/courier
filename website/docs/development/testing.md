@@ -23,7 +23,8 @@ late preference blocks, project-scoped service authentication/revocation, live
 provider updates, payload cleanup, retry exhaustion, expiration and replay.
 Session lifecycle, cross-instance login limits and the post-completion
 deduplication retention window also run against PostgreSQL. Release tooling tests
-check immutable versions and synchronized package/contract versions.
+exercise the interactive bump, cancellation and tag-recreation paths against
+temporary local Git repositories and bare remotes.
 Additional unit tests cover strict schemas, localization/HTML escaping, integer
 precision, SMTP success boundaries and encrypted WebPush requests.
 

@@ -1,16 +1,32 @@
 # Releases
 
-Run `make release` from a clean, committed `master` checkout after CI is green.
-The interactive command proposes the first SDK version or a patch bump; enter an
-explicit version if needed. `make release VERSION=0.1.0` preselects a version but
-still asks for confirmation. `make release-plan` prints the proposal without
-modifying files, creating tags or pushing.
+Run `make release` from a clean, committed checkout after CI is green. The
+interactive Makefile recipe follows IAM's release menu:
 
-The release helper fetches origin, requires local HEAD to match `origin/master`,
-rejects existing tags and versions outside v0/v1, and keeps tags immutable. It
-updates SDK/admin package versions, the local workspace dependency and OpenAPI
-info.version, regenerates API output, runs checks, creates a conventional release
-commit and an annotated tag, then pushes branch and tag atomically.
+```text
+1) bump version
+2) recreate last tag (vX.Y.Z) on HEAD   [force]
+3) cancel
+```
+
+**Bump version** opens a second menu: major, minor or patch. The base is the latest
+local `vMAJOR.MINOR.PATCH` tag, sorted numerically; without tags it is `0.0.0`.
+The first major/minor/patch choices therefore produce `1.0.0`, `0.1.0` or `0.0.1`.
+Versions above major 1 are rejected because they require a new Go module path.
+
+The recipe prints the actions and requires the exact confirmation `yes`. It
+updates the SDK version and the admin workspace's SDK dependency, runs Yarn,
+commits the changes, creates an annotated tag and pushes HEAD followed by the tag.
+It does not fetch tags, require a specific branch, demand that HEAD already match
+origin, or run the test suite locally. Run checks and fetch tags beforehand when
+needed. The OpenAPI info version describes the API contract independently of the
+SDK release version.
+
+**Recreate last tag** requires an existing local release tag and an SDK version
+matching it. After confirmation, it deletes the tag from origin if present,
+recreates the local annotated tag on HEAD and force-pushes it. This changes the
+meaning of an existing version and is intended for local development releases,
+not immutable production versions. Cancellation makes no changes.
 
 A `v*` tag triggers the release workflow. Full CI must pass before publication:
 
@@ -23,8 +39,13 @@ workflow uses `GITHUB_TOKEN` with scoped package/content permissions, with no
 npmjs.org publication. Enable Actions/package creation in the repository or
 organization. Private package installation requires a token with read access.
 
-Do not delete or recreate published tags. For publication failure, inspect the
-failed job before rerunning it: already-published package versions are immutable.
+For a recreated tag, the workflow attempts to delete the existing GitHub npm
+package version before publishing it again, as in IAM. Configure the optional
+`PACKAGES_TOKEN` secret with package deletion permissions for this operation.
+Without it, a first publication still works; republishing an existing npm version
+fails. The normal `GITHUB_TOKEN` cannot delete package versions. An existing
+GitHub Release is updated and its assets are replaced; Docker tags are rebuilt.
+For production versions, use a new version instead of recreating the tag.
 `make release` starts publication; it does not wait for or guarantee its completion.
 Inspect the release workflow, artifacts and registry image after it finishes.
 

@@ -104,8 +104,7 @@ make browser-test       # requires running local stack and Playwright Chromium
 make docs-deps docs-build
 make generate           # OpenAPI → Go/TS; SQL → query types
 make migration NAME=description
-make release-plan       # preview the next release; no tag or push
-make release            # interactive release, after a clean commit and green CI
+make release            # bump major/minor/patch, recreate the last tag, or cancel
 ```
 
 Install Chromium with `yarn playwright install chromium`; use `CHROMIUM_PATH` for

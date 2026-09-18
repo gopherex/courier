@@ -64,12 +64,48 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
+      # Republish-on-tag-recreate needs the existing version gone first; GitHub
+      # Packages rejects re-publishing a live version. The automatic
+      # GITHUB_TOKEN cannot delete packages (no delete:packages scope — the most
+      # a workflow token gets is packages: write), so deletion only works when a
+      # PAT with delete:packages is provided as the PACKAGES_TOKEN secret. When
+      # it is absent we warn and let publish proceed (a first-time publish still
+      # succeeds; a true re-publish then fails loudly below).
+      - name: Delete existing version (allow republish on tag re-create)
+        continue-on-error: true
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::PACKAGES_TOKEN not set; cannot delete existing version. Re-publishing an existing version will fail. Add a PAT with delete:packages as the PACKAGES_TOKEN secret."
+            exit 0
+          fi
+          id="$(gh api --paginate "/orgs/${ORG}/packages/npm/${PKG}/versions" \
+            --jq ".[] | select(.name == \"${VERSION}\") | .id" 2>/dev/null || true)"
+          if [ -z "$id" ]; then
+            echo "No existing ${PKG}@${VERSION}, nothing to delete"
+            exit 0
+          fi
+          echo "Deleting existing ${PKG}@${VERSION} (version id ${id})"
+          if ! gh api -X DELETE "/orgs/${ORG}/packages/npm/${PKG}/versions/${id}"; then
+            echo "::warning::Failed to delete ${PKG}@${VERSION}; PACKAGES_TOKEN likely lacks delete:packages. Re-publish will fail."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+          ORG: ${{ github.repository_owner }}
+          PKG: courier-sdk
+          VERSION: ${{ steps.version.outputs.version }}
+
       - name: Publish SDK to GitHub Packages
         working-directory: sdk/ts
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create GitHub release
-        run: gh release create "$RELEASE_TAG" .build/release/* --verify-tag --generate-notes --title "$RELEASE_TAG"
+      - name: Create or update GitHub release
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --title "$RELEASE_TAG" --target "$GITHUB_SHA"
+            gh release upload "$RELEASE_TAG" .build/release/* --clobber
+          else
+            gh release create "$RELEASE_TAG" .build/release/* --verify-tag --generate-notes --title "$RELEASE_TAG"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
