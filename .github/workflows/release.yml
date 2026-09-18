@@ -1,0 +1,75 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+  publish:
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      packages: write
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.23.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+          registry-url: https://npm.pkg.github.com
+          scope: '@gopherex'
+      - name: Validate tag and SDK version
+        id: version
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          tag = os.environ['RELEASE_TAG']
+          if not re.fullmatch(r'v[01]\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', tag):
+              raise SystemExit('Invalid release tag')
+          version = tag[1:]
+          with open('sdk/ts/package.json') as source:
+              assert json.load(source)['version'] == version, 'SDK version differs from tag'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'version={version}\n')
+          PY
+      - run: make node-deps build-sdk
+      - name: Pack release assets
+        run: |
+          mkdir -p .build/release
+          npm pack ./sdk/ts --pack-destination .build/release
+          cp openapi/openapi.yaml .build/release/openapi.yaml
+          cd .build/release
+          sha256sum ./*.tgz openapi.yaml > SHA256SUMS
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+      - name: Publish SDK to GitHub Packages
+        working-directory: sdk/ts
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub release
+        run: gh release create "$RELEASE_TAG" .build/release/* --verify-tag --generate-notes --title "$RELEASE_TAG"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Repository checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.23.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Install frontend dependencies
+        run: make node-deps
+
+      - name: Check repository
+        run: make check
+
+      - name: PostgreSQL and SMTP integration tests
+        run: make integration
+
+      - name: Build runnable service
+        run: make build
+
+      - name: Install browser
+        run: yarn playwright install --with-deps chromium
+
+      - name: Browser delivery flow
+        run: |
+          make dev-env dev-up migrate
+          set -a
+          source .env
+          set +a
+          bin/courier > .build/server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"; docker compose down' EXIT
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://localhost:18080/readyz; then break; fi
+            sleep 1
+          done
+          make browser-test
+
+      - name: Build container image
+        run: docker build -t courier:ci .

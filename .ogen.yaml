@@ -1,0 +1,11 @@
+parser:
+  infer_types: true
+  allow_remote: false
+generator:
+  convenient_errors: on
+  features:
+    enable:
+      - paths/client
+      - paths/server
+      - client/request/validation
+      - server/response/validation

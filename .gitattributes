@@ -1,0 +1,2 @@
+# Preserve upstream-generated protobuf sources byte-for-byte, including comment whitespace.
+third_party/schemapb/src/gen/** -whitespace linguist-generated=true

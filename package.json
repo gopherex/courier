@@ -1,0 +1,20 @@
+{
+  "name": "courier-workspace",
+  "private": true,
+  "workspaces": [
+    "sdk/ts",
+    "web",
+    "third_party/schemapb"
+  ],
+  "scripts": {
+    "generate": "yarn workspace @gopherex/courier-sdk generate",
+    "build": "yarn workspace @gopherex/courier-sdk build && yarn workspace @gopherex/courier-admin build",
+    "typecheck": "tsc --noEmit -p web/tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@hey-api/openapi-ts": "0.64.0",
+    "playwright": "1.63.0"
+  },
+  "packageManager": "yarn@1.22.22"
+}

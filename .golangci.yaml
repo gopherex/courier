@@ -1,0 +1,180 @@
+version: "2"
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  default: none
+  # Strict baseline from IAM, without its package-specific exceptions or
+  # assumptions about Courier's protocol and dependencies.
+  enable:
+    - asasalint
+    - bidichk
+    - bodyclose
+    - canonicalheader
+    - containedctx
+    - contextcheck
+    - cyclop
+    - decorder
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - err113
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gochecknoinits
+    - gochecksumtype
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gomoddirectives
+    - goprintffuncname
+    - gosec
+    - gosmopolitan
+    - govet
+    - grouper
+    - inamedparam
+    - ineffassign
+    - interfacebloat
+    - intrange
+    - ireturn
+    - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - mirror
+    - misspell
+    - mnd
+    - musttag
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - nosprintfhostport
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - reassign
+    - revive
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+    - staticcheck
+    - tagalign
+    - testableexamples
+    - testifylint
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - varnamelen
+    - wastedassign
+    - whitespace
+    - wrapcheck
+    - wsl_v5
+  settings:
+    errcheck:
+      check-type-assertions: true
+    exhaustive:
+      check: [switch]
+    cyclop:
+      max-complexity: 15
+    funlen:
+      lines: 75
+    gocognit:
+      min-complexity: 30
+    gocritic:
+      enabled-tags: [diagnostic, style, performance, experimental, opinionated]
+      disabled-checks:
+        - dupImport
+        - octalLiteral
+        - whyNoLint
+        # Conflicts with nonamedreturns.
+        - unnamedResult
+    govet:
+      enable-all: true
+      disable: [fieldalignment]
+      settings:
+        shadow:
+          strict: true
+    ireturn:
+      allow: [anon, error, empty, stdlib, generic]
+    lll:
+      line-length: 120
+    misspell:
+      locale: US
+      ignore-rules: [cancelled]
+    nakedret:
+      max-func-lines: 0
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+    varnamelen:
+      max-distance: 5
+      min-name-length: 3
+      check-receiver: false
+      check-return: false
+      check-type-param: false
+      ignore-names: [err, ctx, tx, id, ok, db, w, r, f, s, k, v, m, b, t, c, i, n, p, ch]
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+  exclusions:
+    generated: strict
+    # Fixtures may repeat values and use white-box tests. Error handling,
+    # security, and context checks still apply to tests.
+    rules:
+      - path: _test\.go$
+        linters:
+          - dupl
+          - err113
+          - funlen
+          - goconst
+          - mnd
+          - testpackage
+          - varnamelen
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+formatters:
+  enable: [gci, gofumpt, goimports]
+  settings:
+    gofumpt:
+      module-path: github.com/gopherex/courier
+    goimports:
+      local-prefixes: [github.com/gopherex/courier]
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/gopherex/courier)
+      custom-order: true
+  exclusions:
+    generated: strict

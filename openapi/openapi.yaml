@@ -1,0 +1,959 @@
+openapi: 3.0.3
+info:
+  title: Courier API
+  version: 0.1.0
+  description: Trusted-service notification delivery. A 202 response means durable
+    admission, not delivery.
+paths:
+  /v1/messages:
+    post:
+      operationId: send
+      security:
+      - ServiceKey: []
+      responses:
+        '202':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Accepted'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendRequest'
+  /v1/recipients/{recipient_id}/preferences:
+    get:
+      operationId: getPreferences
+      security:
+      - ServiceKey: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preferences'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      parameters: &id001
+      - name: recipient_id
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: putPreferences
+      security:
+      - ServiceKey: []
+      responses:
+        '204':
+          description: Success
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Preferences'
+      parameters: *id001
+  /admin/session:
+    post:
+      operationId: login
+      security: []
+      responses:
+        '204':
+          description: Success
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+    delete:
+      operationId: logout
+      security:
+      - AdminSession: []
+      responses:
+        '204':
+          description: Success
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /admin/projects:
+    get:
+      operationId: listProjects
+      security:
+      - AdminSession: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projects'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /admin/projects/{project_id}:
+    put:
+      operationId: putProject
+      security:
+      - AdminSession: []
+      responses:
+        '204':
+          description: Success
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectConfig'
+      parameters:
+      - &id002
+        name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+  /admin/projects/{project_id}/providers:
+    get:
+      operationId: listProviders
+      security:
+      - AdminSession: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Providers'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      parameters:
+      - *id002
+    put:
+      operationId: putProvider
+      security:
+      - AdminSession: []
+      responses:
+        '204':
+          description: Success
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderSettings'
+      parameters:
+      - *id002
+  /admin/projects/{project_id}/keys:
+    get:
+      operationId: listKeys
+      security:
+      - AdminSession: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKeys'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      parameters:
+      - *id002
+    post:
+      operationId: issueKey
+      security:
+      - AdminSession: []
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuedKey'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKeyRequest'
+      parameters:
+      - *id002
+  /admin/projects/{project_id}/keys/{key_id}:
+    delete:
+      operationId: revokeKey
+      security:
+      - AdminSession: []
+      responses:
+        '204':
+          description: Success
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      parameters:
+      - *id002
+      - name: key_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /admin/projects/{project_id}/preview:
+    post:
+      operationId: preview
+      security:
+      - AdminSession: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rendered'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+      parameters:
+      - *id002
+  /admin/projects/{project_id}/test:
+    post:
+      operationId: testSend
+      security:
+      - AdminSession: []
+      responses:
+        '202':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Accepted'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendRequest'
+      parameters:
+      - *id002
+  /admin/projects/{project_id}/dead-letters:
+    get:
+      operationId: listDeadLetters
+      security:
+      - AdminSession: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeadLetters'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      parameters:
+      - *id002
+      - name: after
+        in: query
+        schema:
+          type: string
+          format: uuid
+  /admin/projects/{project_id}/dead-letters/{delivery_id}/replay:
+    post:
+      operationId: replay
+      security:
+      - AdminSession: []
+      responses:
+        '204':
+          description: Success
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      parameters:
+      - *id002
+      - name: delivery_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+components:
+  securitySchemes:
+    ServiceKey:
+      type: http
+      scheme: bearer
+    AdminSession:
+      type: apiKey
+      in: cookie
+      name: courier_session
+  schemas:
+    Channel:
+      type: string
+      enum:
+      - email
+      - webpush
+      - fcm
+    Translations:
+      type: object
+      additionalProperties:
+        type: string
+        maxLength: 2048
+      maxProperties: 64
+    Data:
+      type: object
+      additionalProperties: &id003 {}
+      description: Dynamic JSON object validated against the configured schemapb schema.
+    Schema:
+      type: object
+      additionalProperties: *id003
+      description: schemapb Schema in protobuf JSON format. Strict objects only; computed
+        fields, defaults, coercion and transformations are prohibited.
+    Problem:
+      type: object
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+      - code
+      - message
+    Accepted:
+      type: object
+      additionalProperties: false
+      properties:
+        message_id:
+          type: string
+          format: uuid
+        accepted:
+          type: boolean
+          enum:
+          - true
+        queued_channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Channel'
+      required:
+      - message_id
+      - accepted
+      - queued_channels
+    EmailTarget:
+      type: object
+      additionalProperties: false
+      properties:
+        address:
+          type: string
+          format: email
+          maxLength: 320
+      required:
+      - address
+    WebPushTarget:
+      type: object
+      additionalProperties: false
+      properties:
+        endpoint:
+          type: string
+          format: uri
+          maxLength: 4096
+        p256dh:
+          type: string
+          maxLength: 256
+        auth:
+          type: string
+          maxLength: 128
+      required:
+      - endpoint
+      - p256dh
+      - auth
+    FCMTarget:
+      type: object
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 4096
+      required:
+      - token
+    DeliveryInput:
+      type: object
+      additionalProperties: false
+      properties:
+        channel:
+          $ref: '#/components/schemas/Channel'
+        default_enabled:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Data'
+        email:
+          $ref: '#/components/schemas/EmailTarget'
+        webpush:
+          $ref: '#/components/schemas/WebPushTarget'
+        fcm:
+          $ref: '#/components/schemas/FCMTarget'
+      required:
+      - channel
+      - default_enabled
+      - data
+      description: Exactly one target matching channel is required. At most one delivery
+        per channel.
+    SendRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        notification_key:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+        idempotency_key:
+          type: string
+          minLength: 1
+          maxLength: 128
+        recipient_id:
+          type: string
+          minLength: 1
+          maxLength: 256
+        locale:
+          type: string
+          minLength: 2
+          maxLength: 64
+        expires_at:
+          type: string
+          format: date-time
+        deliveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryInput'
+          minItems: 1
+          maxItems: 3
+      required:
+      - notification_key
+      - idempotency_key
+      - deliveries
+    Preference:
+      type: object
+      additionalProperties: false
+      properties:
+        notification_key:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+        channel:
+          $ref: '#/components/schemas/Channel'
+        enabled:
+          type: boolean
+      required:
+      - notification_key
+      - channel
+      - enabled
+    Preferences:
+      type: object
+      additionalProperties: false
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Preference'
+          maxItems: 1000
+      required:
+      - rules
+    Template:
+      type: object
+      additionalProperties: false
+      properties:
+        locale:
+          type: string
+          minLength: 2
+          maxLength: 64
+        subject:
+          type: string
+          maxLength: 262144
+        text:
+          type: string
+          maxLength: 262144
+        html:
+          type: string
+          maxLength: 262144
+        reply_to:
+          type: string
+          maxLength: 320
+        title:
+          type: string
+          maxLength: 262144
+        body:
+          type: string
+          maxLength: 262144
+        url:
+          type: string
+          maxLength: 4096
+      required:
+      - locale
+      description: Email requires subject and text or html; push requires title and
+        body. URL must render to HTTPS when present.
+    ChannelConfig:
+      type: object
+      additionalProperties: false
+      properties:
+        channel:
+          $ref: '#/components/schemas/Channel'
+        schema:
+          $ref: '#/components/schemas/Schema'
+        labels:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Translations'
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Template'
+          minItems: 1
+          maxItems: 64
+      required:
+      - channel
+      - schema
+      - templates
+    Notification:
+      type: object
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+        active:
+          type: boolean
+        title:
+          $ref: '#/components/schemas/Translations'
+        description:
+          $ref: '#/components/schemas/Translations'
+        channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChannelConfig'
+          minItems: 1
+          maxItems: 3
+      required:
+      - key
+      - active
+      - title
+      - description
+      - channels
+    ProjectConfig:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          $ref: '#/components/schemas/Translations'
+        default_locale:
+          type: string
+          minLength: 2
+          maxLength: 64
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+          maxItems: 256
+      required:
+      - title
+      - default_locale
+      - notifications
+    Project:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+        config:
+          $ref: '#/components/schemas/ProjectConfig'
+      required:
+      - id
+      - config
+    Projects:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+      required:
+      - items
+    SMTPSettings:
+      type: object
+      additionalProperties: false
+      properties:
+        host:
+          type: string
+          minLength: 1
+          maxLength: 253
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        tls:
+          type: string
+          enum:
+          - starttls
+          - tls
+          - plain
+        username:
+          type: string
+          maxLength: 1024
+        password:
+          type: string
+          maxLength: 8192
+        from:
+          type: string
+          maxLength: 320
+      required:
+      - host
+      - port
+      - tls
+      - from
+      description: plain is permitted only with the explicit development runtime flag.
+    WebPushSettings:
+      type: object
+      additionalProperties: false
+      properties:
+        subject:
+          type: string
+          maxLength: 512
+        public_key:
+          type: string
+          maxLength: 256
+        private_key:
+          type: string
+          maxLength: 256
+      required:
+      - subject
+      - public_key
+      - private_key
+    FCMSettings:
+      type: object
+      additionalProperties: false
+      properties:
+        project_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        service_account:
+          $ref: '#/components/schemas/Data'
+      required:
+      - project_id
+      - service_account
+    ProviderSettings:
+      type: object
+      additionalProperties: false
+      properties:
+        channel:
+          $ref: '#/components/schemas/Channel'
+        smtp:
+          $ref: '#/components/schemas/SMTPSettings'
+        webpush:
+          $ref: '#/components/schemas/WebPushSettings'
+        fcm:
+          $ref: '#/components/schemas/FCMSettings'
+      required:
+      - channel
+      description: Exactly one configuration matching channel; encrypted at rest and
+        never returned by read APIs.
+    ProviderStatus:
+      type: object
+      additionalProperties: false
+      properties:
+        channel:
+          $ref: '#/components/schemas/Channel'
+        configured:
+          type: boolean
+      required:
+      - channel
+      - configured
+    Providers:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderStatus'
+      required:
+      - items
+    APIKeyRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required:
+      - name
+    APIKey:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - name
+      - created_at
+    APIKeys:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIKey'
+      required:
+      - items
+    IssuedKey:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        secret:
+          type: string
+      required:
+      - id
+      - secret
+      description: Secret is shown once.
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          minLength: 32
+          maxLength: 1024
+      required:
+      - key
+    PreviewRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        notification_key:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+        channel:
+          $ref: '#/components/schemas/Channel'
+        locale:
+          type: string
+          minLength: 2
+          maxLength: 64
+        data:
+          $ref: '#/components/schemas/Data'
+      required:
+      - notification_key
+      - channel
+      - data
+    Rendered:
+      type: object
+      additionalProperties: false
+      properties:
+        locale:
+          type: string
+        subject:
+          type: string
+        text:
+          type: string
+        html:
+          type: string
+        reply_to:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        url:
+          type: string
+      required:
+      - locale
+      - subject
+      - text
+      - html
+      - reply_to
+      - title
+      - body
+      - url
+    Snapshot:
+      type: object
+      additionalProperties: false
+      properties:
+        project_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+        message_id:
+          type: string
+          format: uuid
+        notification_key:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
+        recipient_id:
+          type: string
+        default_enabled:
+          type: boolean
+        channel:
+          $ref: '#/components/schemas/Channel'
+        email:
+          $ref: '#/components/schemas/EmailTarget'
+        webpush:
+          $ref: '#/components/schemas/WebPushTarget'
+        fcm:
+          $ref: '#/components/schemas/FCMTarget'
+        rendered:
+          $ref: '#/components/schemas/Rendered'
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - project_id
+      - message_id
+      - notification_key
+      - recipient_id
+      - default_enabled
+      - channel
+      - rendered
+      - created_at
+    DeadLetter:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        attempts:
+          type: integer
+        error_code:
+          type: string
+        finished_at:
+          type: string
+          format: date-time
+        snapshot:
+          $ref: '#/components/schemas/Snapshot'
+      required:
+      - id
+      - attempts
+      - error_code
+      - finished_at
+      - snapshot
+    DeadLetters:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeadLetter'
+      required:
+      - items
+      description: Up to 100 oldest dead letters; use after cursor for subsequent
+        pages.

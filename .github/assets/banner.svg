@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="240" viewBox="0 0 880 240" role="img" aria-label="Courier — Notification delivery">
+<defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0v40" fill="none" stroke="#282d35" stroke-width="1"/></pattern><clipPath id="bounds"><rect width="880" height="240" rx="12"/></clipPath></defs>
+<g clip-path="url(#bounds)"><rect width="880" height="240" fill="#181b21"/><rect width="880" height="240" fill="url(#grid)" opacity=".55"/><path d="M0 238h880" stroke="#5796dc" stroke-width="4"/>
+<g transform="translate(56 68) scale(1.6)"><path d="M42 12H24L10 26v12l14 14h18V42H28l-8-8v-4l8-8h14V12Z" fill="#79b4f5"/><path d="M36 28h13v-6l13 10-13 10v-6H36v-8Z" fill="#e7effa"/></g>
+<text x="190" y="126" fill="#edf0f5" font-family="Segoe UI,system-ui,sans-serif" font-size="58" font-weight="650" letter-spacing="-2">courier</text>
+<text x="194" y="159" fill="#a5aebb" font-family="Segoe UI,system-ui,sans-serif" font-size="17">Notification delivery for your services</text>
+<g font-family="Consolas,monospace" font-size="12"><text x="610" y="91" fill="#79b4f5">SMTP / WEB PUSH / FCM</text><path d="M610 114h196" stroke="#3c4655"/><text x="610" y="140" fill="#b2bdcd">ADMIT → QUEUE → DELIVER</text><text x="610" y="163" fill="#7f8b9d">PostgreSQL · OpenAPI</text></g></g></svg>

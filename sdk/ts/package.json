@@ -1,0 +1,33 @@
+{
+  "name": "@gopherex/courier-sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-ts",
+    "build": "tsup src/index.ts --format esm --dts --clean"
+  },
+  "dependencies": {
+    "@hey-api/client-fetch": "0.10.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "tsup": "8.5.1"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gopherex/courier.git",
+    "directory": "sdk/ts"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}
